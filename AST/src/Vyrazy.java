@@ -1,3 +1,8 @@
+/*
+    This code is created mainly by Vojtěch Horký -- https://d3s.mff.cuni.cz/people/vojtechhorky/
+    Some functions added by Bohdan Kopčák
+ */
+
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Scanner;
