@@ -157,6 +157,12 @@ public class Vyrazy {
                     number = 0;
                     insideNumber = false;
                 }
+
+                // Comments function
+                if (c == '#') {
+                    break;
+                }
+
                 if (c == '+') {
                     tokens.add(Token.makeSum());
                 } else if (c == '*') {
