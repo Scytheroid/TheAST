@@ -1,5 +1,6 @@
 import java.util.List;
 import java.util.LinkedList;
+import java.util.Scanner;
 
 public class Vyrazy {
     public static interface Node {
@@ -242,10 +243,14 @@ public class Vyrazy {
     }
 
     public static void main(String[] args) {
-        String input = args[0];
-        Lexer lexer = new Lexer(input);
-        Node ast = Parser.parse(lexer);
-        System.out.printf("'%s' => '%s' = %d\n", input, ast.format(), ast.compute());
-        ast.tree("");
+        Scanner sc = new Scanner(System.in);
+        while (sc.hasNextLine()) {
+            String input = sc.nextLine();
+            Lexer lexer = new Lexer(input);
+            Node ast = Parser.parse(lexer);
+            System.out.printf("'%s' => '%s' = %d\n", input, ast.format(), ast.compute());
+            ast.tree("");
+        }
+        sc.close();
     }
 }
