@@ -3,6 +3,7 @@
     Some functions added by Bohdan Kopčák
  */
 
+import java.io.PrintStream;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Scanner;
@@ -253,15 +254,23 @@ public class Vyrazy {
         }
     }
 
-    public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
+    public static void run(Scanner sc, PrintStream out, PrintStream debug) {
+
         while (sc.hasNextLine()) {
             String input = sc.nextLine();
             Lexer lexer = new Lexer(input);
             Node ast = Parser.parse(lexer);
-            System.out.printf("'%s' => '%s' = %d\n", input, ast.format(), ast.compute());
+            int result = ast.compute();
+            out.printf("'%s' => '%s' = %d\n", input, ast.format(), result);
             ast.tree("");
+            if (out != debug) {
+                debug.println(result);
+            }
         }
         sc.close();
+    }
+
+    public static void main(String[] args) {
+        run(new Scanner(System.in), System.out, System.out);
     }
 }
