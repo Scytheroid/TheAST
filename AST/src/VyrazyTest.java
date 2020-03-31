@@ -1,5 +1,11 @@
 import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
+import java.util.Scanner;
+
 import static org.junit.Assert.assertEquals;
 
 public class VyrazyTest {
@@ -41,5 +47,25 @@ public class VyrazyTest {
     @Test
     public void submergedBrackets() {
         assertEquals(32, compute("((3+2)*3+1)*2"));
+    }
+
+    @Test
+    public void standardInput() throws UnsupportedEncodingException {
+        String input = "1 + 2\n";
+        final ByteArrayOutputStream baos_out = new ByteArrayOutputStream();
+        final ByteArrayOutputStream baos_debug = new ByteArrayOutputStream();
+        final String utf8 = StandardCharsets.UTF_8.name();
+        PrintStream out = new PrintStream(baos_out, true, utf8);
+        PrintStream debug = new PrintStream(baos_debug, true, utf8);
+
+        Vyrazy.run(new Scanner(input), out, debug);
+
+        assertEquals(baos_debug.toString().trim().replace("\r",""), "3");
+
+
+    }
+
+    @Test
+    public void name() {
     }
 }
