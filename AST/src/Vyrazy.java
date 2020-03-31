@@ -4,11 +4,32 @@
  */
 
 import java.io.PrintStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Scanner;
 
 public class Vyrazy {
+    public static class Environment {
+        HashMap<Character, Integer> variables;
+
+        public Environment() {
+            variables = new HashMap<>();
+        }
+
+        public void setVariable(String key, Integer value) {
+            variables.put(key.charAt(0), value);
+        }
+
+        public int getVariable(String key) {
+            if (variables.containsKey(key.charAt(0))) {
+                return variables.get(key.charAt(0));
+            } else {
+                throw new IllegalStateException("Non existent variable.");
+            }
+        }
+    }
+
     public static interface Node {
         public static final String INDENT = "  ";
         public int compute();

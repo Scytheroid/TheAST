@@ -71,8 +71,21 @@ public class VyrazyTest {
     }
 
     @Test
-    public void standardInput() throws UnsupportedEncodingException {
-        ComputeSOUT SimpleTest = new ComputeSOUT("1 + 2\n");
+    public void standardInput() {
+        ComputeSOUT SimpleTest = null;
+        try { SimpleTest = new ComputeSOUT("1 + 2"); } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
         assertEquals(SimpleTest.baos_debug.toString().trim().replace("\r",""), "3");
     }
+
+    @Test
+    public void implicitVar() {
+        ComputeSOUT SimpleTest = null;
+        try { SimpleTest = new ComputeSOUT("1 + 2\n_"); } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        assertEquals(SimpleTest.baos_debug.toString().trim().replace("\r",""), "3\n3");
+    }
+
 }
