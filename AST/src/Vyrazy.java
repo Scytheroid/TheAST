@@ -17,13 +17,13 @@ public class Vyrazy {
             variables = new HashMap<>();
         }
 
-        public void setVariable(String key, Integer value) {
-            variables.put(key.charAt(0), value);
+        public void setVariable(char key, Integer value) {
+            variables.put(key, value);
         }
 
-        public int getVariable(String key) {
-            if (variables.containsKey(key.charAt(0))) {
-                return variables.get(key.charAt(0));
+        public int getVariable(char key) {
+            if (variables.containsKey(key)) {
+                return variables.get(key);
             } else {
                 throw new IllegalStateException("Non existent variable.");
             }
@@ -61,9 +61,9 @@ public class Vyrazy {
     }
 
     public static class Variable implements Node {
-        String name;
+        char name;
 
-        public Variable(String name) {
+        public Variable(char name) {
             this.name = name;
         }
 
@@ -74,7 +74,7 @@ public class Vyrazy {
 
         @Override
         public String format() {
-            return name;
+            return Character.toString(name);
         }
 
         @Override
@@ -84,10 +84,10 @@ public class Vyrazy {
     }
 
     static class Assignment implements Node {
-        String variable;
+        char variable;
         Node expression;
 
-        public Assignment(String variable, Node expression) {
+        public Assignment(char variable, Node expression) {
             this.variable = variable;
             this.expression = expression;
         }
@@ -176,26 +176,26 @@ public class Vyrazy {
     public static class Token {
         private final TokenType type;
         private final int number;
-        private final String name;
-        private Token(TokenType t, int num, String name) {
+        private final char name;
+        private Token(TokenType t, int num, char name) {
             type = t;
             number = num;
             this.name = name;
         }
         private Token(TokenType t, int num) {
-            this(t, num, "");
+            this(t, num, '\0');
         }
-        private Token(TokenType t, String name) {
+        private Token(TokenType t, char name) {
             this(t, 0, name);
         }
         private Token(TokenType t) {
-            this(t, 0, "");
+            this(t, 0, '\0');
         }
 
         public static Token makeNumber(int value) {
             return new Token(TokenType.NUMBER, value);
         }
-        public static Token makeVariable(String name) {
+        public static Token makeVariable(char name) {
             return new Token(TokenType.VARIABLE, name);
         }
         public static Token makeSum() {
@@ -225,7 +225,7 @@ public class Vyrazy {
             }
             return number;
         }
-        public String getName() {
+        public char getName() {
             if (type != TokenType.VARIABLE) {
                 throw new IllegalStateException("Not a variable.");
             }
@@ -258,7 +258,7 @@ public class Vyrazy {
                 }
 
                 if ((c >= 'a') && (c <= 'z')) {
-                    tokens.add(Token.makeVariable(Character.toString(c)));
+                    tokens.add(Token.makeVariable(c));
                     continue;
                 }
 
@@ -276,7 +276,7 @@ public class Vyrazy {
                 } else if (c == ')') {
                     tokens.add(Token.makeRightBracket());
                 } else if (c == '_') {
-                    tokens.add(Token.makeVariable("_"));
+                    tokens.add(Token.makeVariable('_'));
                 } else if (c == '=') {
                     tokens.add(Token.makeEqualSign());
                 } else if ((c == ' ') || (c == '\t')) {
@@ -323,7 +323,7 @@ public class Vyrazy {
 
         private Node parse() {
             if ((lexer.peek() == TokenType.VARIABLE) && (lexer.peek(1) == TokenType.EQUAL_SIGN)) {
-                String varName = lexer.next().getName();
+                char varName = lexer.next().getName();
                 lexer.next();       // Remove '='
                 Node expression = expression();
                 expect(TokenType.EOF);
@@ -388,7 +388,7 @@ public class Vyrazy {
             if (out != debug) {
                 debug.println(result);
             }
-            env.setVariable("_", result);
+            env.setVariable('_', result);
         }
         sc.close();
     }
