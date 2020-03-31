@@ -32,7 +32,7 @@ public class Vyrazy {
 
     public static interface Node {
         public static final String INDENT = "  ";
-        public int compute();
+        public int compute(Environment env);
         public String format();
         public void tree(String indent);
     }
@@ -45,7 +45,7 @@ public class Vyrazy {
         }
 
         @Override
-        public int compute() {
+        public int compute(Environment env) {
             return value;
         }
 
@@ -57,6 +57,60 @@ public class Vyrazy {
         @Override
         public void tree(String indent) {
             System.out.printf("%s%d\n", indent, value);
+        }
+    }
+
+    public static class Variable implements Node {
+        String name;
+
+        public Variable(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public int compute(Environment env) {
+            return env.getVariable(name);
+        }
+
+        @Override
+        public String format() {
+            return name;
+        }
+
+        @Override
+        public void tree(String indent) {
+            System.out.printf("%s%s\n", indent, name);
+        }
+    }
+
+    static class Assignment implements Node {
+        String variable;
+        Node expression;
+
+        public Assignment(String variable, Node expression) {
+            this.variable = variable;
+            this.expression = expression;
+        }
+
+        @Override
+        public int compute(Environment env) {
+            int result = expression.compute(env);
+            env.setVariable(variable, result);
+            return result;
+        }
+
+        @Override
+        public String format() {
+            return null;
+        }
+
+        @Override
+        public void tree(String indent) {
+            /*
+            System.out.printf("%s%s\n", indent, name);
+            left.tree(indent + INDENT);
+            right.tree(indent + INDENT);
+             */
         }
     }
 
@@ -76,8 +130,8 @@ public class Vyrazy {
         protected abstract int compute(int left, int right);
 
         @Override
-        public int compute() {
-            return compute(left.compute(), right.compute());
+        public int compute(Environment env) {
+            return compute(left.compute(env), right.compute(env));
         }
 
         @Override
@@ -115,35 +169,52 @@ public class Vyrazy {
         }
     }
 
-
     public static enum TokenType {
-        NUMBER, SUM, PRODUCT, LEFT_BRACKET, RIGHT_BRACKET, EOF
+        NUMBER, VARIABLE, SUM, PRODUCT, EQUAL_SIGN, LEFT_BRACKET, RIGHT_BRACKET, EOF;
     }
 
     public static class Token {
         private final TokenType type;
         private final int number;
-        private Token(TokenType t, int num) {
+        private final String name;
+        private Token(TokenType t, int num, String name) {
             type = t;
             number = num;
+            this.name = name;
         }
+        private Token(TokenType t, int num) {
+            this(t, num, "");
+        }
+        private Token(TokenType t, String name) {
+            this(t, 0, name);
+        }
+        private Token(TokenType t) {
+            this(t, 0, "");
+        }
+
         public static Token makeNumber(int value) {
             return new Token(TokenType.NUMBER, value);
         }
+        public static Token makeVariable(String name) {
+            return new Token(TokenType.VARIABLE, name);
+        }
         public static Token makeSum() {
-            return new Token(TokenType.SUM, 0);
+            return new Token(TokenType.SUM);
         }
         public static Token makeProduct() {
-            return new Token(TokenType.PRODUCT, 0);
+            return new Token(TokenType.PRODUCT);
+        }
+        public static Token makeEqualSign() {
+            return new Token(TokenType.EQUAL_SIGN);
         }
         public static Token makeLeftBracket() {
-            return new Token(TokenType.LEFT_BRACKET, 0);
+            return new Token(TokenType.LEFT_BRACKET);
         }
         public static Token makeRightBracket() {
-            return new Token(TokenType.RIGHT_BRACKET, 0);
+            return new Token(TokenType.RIGHT_BRACKET);
         }
         public static Token makeEof() {
-            return new Token(TokenType.EOF, 0);
+            return new Token(TokenType.EOF);
         }
         public TokenType getType() {
             return type;
@@ -153,6 +224,12 @@ public class Vyrazy {
                 throw new IllegalStateException("Not a number.");
             }
             return number;
+        }
+        public String getName() {
+            if (type != TokenType.VARIABLE) {
+                throw new IllegalStateException("Not a variable.");
+            }
+            return name;
         }
     }
 
@@ -170,7 +247,7 @@ public class Vyrazy {
             for (char c : input.toCharArray()) {
                 if ((c >= '0') && (c <= '9')) {
                     insideNumber = true;
-                    number = number*10 + (c - '0');
+                    number = number * 10 + (c - '0');
                     continue;
                 }
 
@@ -178,6 +255,11 @@ public class Vyrazy {
                     tokens.add(Token.makeNumber(number));
                     number = 0;
                     insideNumber = false;
+                }
+
+                if ((c >= 'a') && (c <= 'z')) {
+                    tokens.add(Token.makeVariable(Character.toString(c)));
+                    continue;
                 }
 
                 // Comments function
@@ -193,6 +275,10 @@ public class Vyrazy {
                     tokens.add(Token.makeLeftBracket());
                 } else if (c == ')') {
                     tokens.add(Token.makeRightBracket());
+                } else if (c == '_') {
+                    tokens.add(Token.makeVariable("_"));
+                } else if (c == '=') {
+                    tokens.add(Token.makeEqualSign());
                 } else if ((c == ' ') || (c == '\t')) {
                     // Skip.
                 } else {
@@ -202,6 +288,9 @@ public class Vyrazy {
             tokens.add(Token.makeEof());
         }
 
+        public TokenType peek(int position) {
+            return tokens.get(position).getType();
+        }
         public TokenType peek() {
             return tokens.get(0).getType();
         }
@@ -233,9 +322,17 @@ public class Vyrazy {
         }
 
         private Node parse() {
-            Node result = expression();
-            expect(TokenType.EOF);
-            return result;
+            if ((lexer.peek() == TokenType.VARIABLE) && (lexer.peek(1) == TokenType.EQUAL_SIGN)) {
+                String varName = lexer.next().getName();
+                lexer.next();       // Remove '='
+                Node expression = expression();
+                expect(TokenType.EOF);
+                return new Assignment(varName, expression);
+            } else  {
+                Node result = expression();
+                expect(TokenType.EOF);
+                return result;
+            }
         }
 
         private Node expression() {
@@ -260,33 +357,38 @@ public class Vyrazy {
             }
         }
 
-        private Node number() {
-            if (lexer.peek() == TokenType.LEFT_BRACKET) {
-                lexer.next();
-                Node content = expression();
-                expect(TokenType.RIGHT_BRACKET);
-                lexer.next();
-                return content;
-            } else {
-                expect(TokenType.NUMBER);
-                Token tok = lexer.next();
-                return new Number(tok.getNumber());
-            }
+    private Node number() {
+        TokenType next = lexer.peek();
+        if (next == TokenType.LEFT_BRACKET) {
+            lexer.next();
+            Node content = expression();
+            expect(TokenType.RIGHT_BRACKET);
+            lexer.next();
+            return content;
+        } else if (next == TokenType.VARIABLE) {
+            Token tok = lexer.next();
+            return new Variable(tok.getName());
+        } else {
+            expect(TokenType.NUMBER);
+            Token tok = lexer.next();
+            return new Number(tok.getNumber());
         }
     }
+}
 
     public static void run(Scanner sc, PrintStream out, PrintStream debug) {
-
+        Environment env = new Environment();
         while (sc.hasNextLine()) {
             String input = sc.nextLine();
             Lexer lexer = new Lexer(input);
             Node ast = Parser.parse(lexer);
-            int result = ast.compute();
+            int result = ast.compute(env);
             out.printf("'%s' => '%s' = %d\n", input, ast.format(), result);
             ast.tree("");
             if (out != debug) {
                 debug.println(result);
             }
+            env.setVariable("_", result);
         }
         sc.close();
     }
