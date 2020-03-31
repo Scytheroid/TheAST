@@ -12,9 +12,10 @@ public class VyrazyTest {
 
     // Simple input parsing
     private int compute(String input) {
+        Vyrazy.Environment env = new Vyrazy.Environment();
         Vyrazy.Lexer lexer = new Vyrazy.Lexer(input);
         Vyrazy.Node ast = Vyrazy.Parser.parse(lexer);
-        return ast.compute();
+        return ast.compute(env);
     }
 
     private class ComputeSOUT {
@@ -76,7 +77,7 @@ public class VyrazyTest {
         try { SimpleTest = new ComputeSOUT("1 + 2"); } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-        assertEquals(SimpleTest.baos_debug.toString().trim().replace("\r",""), "3");
+        assertEquals("3\r\n", SimpleTest.baos_debug.toString());
     }
 
     @Test
@@ -85,7 +86,24 @@ public class VyrazyTest {
         try { SimpleTest = new ComputeSOUT("1 + 2\n_"); } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-        assertEquals(SimpleTest.baos_debug.toString().trim().replace("\r",""), "3\n3");
+        assertEquals("3\r\n3\r\n", SimpleTest.baos_debug.toString());
     }
 
+    @Test
+    public void withAssignment() {
+        ComputeSOUT assignmentTest = null;
+        try { assignmentTest = new ComputeSOUT("a = 1 + 2\na"); } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        assertEquals("3\r\n3\r\n", assignmentTest.baos_debug.toString());
+    }
+
+    @Test
+    public void komplexTest() {
+        ComputeSOUT komplexTest = null;
+        try { komplexTest = new ComputeSOUT("a = 1 + 2\nb = 7 + a\nb"); } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        assertEquals("3\r\n10\r\n10\r\n", komplexTest.baos_debug.toString());
+    }
 }
