@@ -17,6 +17,27 @@ public class VyrazyTest {
         return ast.compute();
     }
 
+    private class ComputeSOUT {
+        ByteArrayOutputStream baos_out;
+        ByteArrayOutputStream baos_debug;
+        PrintStream out;
+        PrintStream debug;
+
+        public ComputeSOUT(String input) throws UnsupportedEncodingException {
+            baos_out = new ByteArrayOutputStream();
+            baos_debug = new ByteArrayOutputStream();
+            final String utf8 = StandardCharsets.UTF_8.name();
+            out = new PrintStream(baos_out, true, utf8);
+            debug = new PrintStream(baos_debug, true, utf8);
+
+            Vyrazy.run(new Scanner(input), out, debug);
+        }
+
+    }
+
+    // Declarations necessary for proper system.in testing accesible at
+    // Source: https://stackoverflow.com/a/1760668
+
     // Declarations necessary for proper system.in testing accesible at
     // Source: https://stackoverflow.com/a/50721326
 
@@ -51,21 +72,7 @@ public class VyrazyTest {
 
     @Test
     public void standardInput() throws UnsupportedEncodingException {
-        String input = "1 + 2\n";
-        final ByteArrayOutputStream baos_out = new ByteArrayOutputStream();
-        final ByteArrayOutputStream baos_debug = new ByteArrayOutputStream();
-        final String utf8 = StandardCharsets.UTF_8.name();
-        PrintStream out = new PrintStream(baos_out, true, utf8);
-        PrintStream debug = new PrintStream(baos_debug, true, utf8);
-
-        Vyrazy.run(new Scanner(input), out, debug);
-
-        assertEquals(baos_debug.toString().trim().replace("\r",""), "3");
-
-
-    }
-
-    @Test
-    public void name() {
+        ComputeSOUT SimpleTest = new ComputeSOUT("1 + 2\n");
+        assertEquals(SimpleTest.baos_debug.toString().trim().replace("\r",""), "3");
     }
 }
