@@ -79,13 +79,14 @@ public class Vyrazy {
 
         @Override
         public void tree(String indent) {
-            System.out.printf("%s%s\n", indent, name);
+            System.out.printf("%s%c\n", indent, Character.toUpperCase(name));
         }
     }
 
     static class Assignment implements Node {
         char variable;
         Node expression;
+        String longName = "ROVNÁ SE";
 
         public Assignment(char variable, Node expression) {
             this.variable = variable;
@@ -101,16 +102,13 @@ public class Vyrazy {
 
         @Override
         public String format() {
-            return null;
+            return variable + "=" + expression.format();
         }
 
         @Override
         public void tree(String indent) {
-            /*
-            System.out.printf("%s%s\n", indent, name);
-            left.tree(indent + INDENT);
-            right.tree(indent + INDENT);
-             */
+            System.out.printf("%s%c %s\n", indent, Character.toUpperCase(variable), longName);
+            expression.tree(indent + INDENT + " ");
         }
     }
 
